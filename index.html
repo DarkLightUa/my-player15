@@ -601,7 +601,7 @@
                         backBufferLength: 90,
                         autoStartLoad: true
                     });
-                    hls.loadSource('https://streaming2.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8');
+                    hls.loadSource('https://streaming1.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8');
                     hls.attachMedia(video);
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
                         console.log('Manifest parsed');
@@ -632,7 +632,7 @@
                         }
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = 'https://streaming2.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8';
+                    video.src = 'https://streaming1.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8';
                     video.addEventListener('loadedmetadata', function() {
                         attemptAutoplay();
                     });
@@ -898,3 +898,4 @@
     </script>
 </body>
 </html>
+
