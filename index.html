@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Live Streaming Player</title>
+    <title></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -38,7 +38,7 @@
             position: relative;
             width: 100%;
             height: 100%;
-            background-image: url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiZmRslaovrVP07DAR3DXHelJJx1FOAqt_-LyC5mGL0rC6nw28ZMku-kZ9C1gfdd09gRI85vsKgpE19r50rwM3_2rtMn_qGQg6Wk1KEaQy1GYWxpLDoi-Qt9gCa_ToPpsFrwTLzVPCEaYg7V_-E79uUIoUlYNVccisZZq8So82F9iEy7SkDMI2ZGlbgq-h4/s1000/Untitled%20design%20-%202025-09-20T011659.168.png');
+            background-image: url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgmRFi0nHGuUTPrZ5tR8sD2sWv1L3Oespy813FQb6uNLUuUqIN5zlOKlfIZj2cGvkEiNXvfvEjj3BeHhYEqz0aVaHpJd8QLFcoqFWNVq35HTtUJ5zfy0692k3vRQDZhUde5ll0Q_zYF75WND1Qw7Kb5LIprh9axSw8NNmM65vyJvdyJ9QBinhOI-AXAL20J/s1000/Untitled%20design%20(11).gif');
             background-size: cover;
             background-position: center;
         }
@@ -500,7 +500,7 @@
             <div class="title-overlay">MEDI1 TV MAGHREB HD</div>
             <div class="live-badge">LIVE</div>
             <div class="viewer-count">
-                <i class="fas fa-users"></i> <span id="viewerCount">1.2K</span>
+                <i class="fas fa-users"></i> <span id="viewerCount">1.1K</span>
             </div>
             
             <button class="center-play-btn" id="centerPlayBtn">
@@ -558,12 +558,10 @@
         </div>
     </div>
 
-    <!-- Include HLS.js library -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Elements
             const video = document.getElementById('videoPlayer');
             const playPauseBtn = document.getElementById('playPause');
             const centerPlayBtn = document.getElementById('centerPlayBtn');
@@ -590,45 +588,31 @@
             let controlsTimeout;
             let hls;
             let qualityLevels = [];
-            let currentLevel = -1; // -1 means auto
+            let currentLevel = -1;
             
-            // Initialize player
             initPlayer();
             
             function initPlayer() {
-                // Show loading indicator
                 loadingIndicator.style.display = 'flex';
-                
-                // Check if HLS is supported
                 if (Hls.isSupported()) {
                     hls = new Hls({
-                        // Enable ABR (adaptive bitrate streaming)
                         enableWorker: true,
                         lowLatencyMode: true,
                         backBufferLength: 90,
                         autoStartLoad: true
                     });
-                    
-                    // Replace with your HLS stream URL
-                    hls.loadSource('https://streaming1.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8');
-                    
-                    // Bind HLS to the video element
+                    hls.loadSource('https://streaming2.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8');
                     hls.attachMedia(video);
-                    
-                    // Handle HLS events
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
                         console.log('Manifest parsed');
-                        // Get available quality levels
                         qualityLevels = hls.levels;
                         populateQualityMenu();
                         attemptAutoplay();
                     });
-                    
                     hls.on(Hls.Events.LEVEL_SWITCHED, function(event, data) {
                         currentLevel = data.level;
                         updateQualityMenu();
                     });
-                    
                     hls.on(Hls.Events.ERROR, function(event, data) {
                         console.error('HLS error:', data);
                         if (data.fatal) {
@@ -648,8 +632,7 @@
                         }
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Native HLS support (Safari)
-                    video.src = 'https://streaming1.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8';
+                    video.src = 'https://streaming2.medi1tv.com/live/smil:medi1tv.smil/playlist.m3u8';
                     video.addEventListener('loadedmetadata', function() {
                         attemptAutoplay();
                     });
@@ -659,12 +642,16 @@
             }
             
             function populateQualityMenu() {
-                // Clear existing options except Auto
                 while (qualityMenu.children.length > 1) {
                     qualityMenu.removeChild(qualityMenu.lastChild);
                 }
+
+                // *** FIX 1 of 3: Add a click listener to the 'Auto' option ***
+                const autoOption = qualityMenu.querySelector('.quality-option[data-quality="auto"]');
+                if (autoOption) {
+                    autoOption.addEventListener('click', () => setQuality('auto'));
+                }
                 
-                // Add quality options
                 qualityLevels.forEach((level, index) => {
                     const option = document.createElement('div');
                     option.className = 'quality-option';
@@ -678,10 +665,15 @@
             }
             
             function updateQualityMenu() {
-                // Update active state for quality options
                 const options = qualityMenu.querySelectorAll('.quality-option');
                 options.forEach(option => {
-                    if (parseInt(option.dataset.quality) === currentLevel) {
+                    const qualityValue = option.dataset.quality;
+
+                    
+                    const isAutoAndActive = (qualityValue === 'auto' && currentLevel === -1);
+                    const isLevelAndActive = (parseInt(qualityValue) === currentLevel);
+
+                    if (isAutoAndActive || isLevelAndActive) {
                         option.classList.add('active');
                     } else {
                         option.classList.remove('active');
@@ -691,8 +683,12 @@
             
             function setQuality(level) {
                 if (hls) {
-                    currentLevel = level;
-                    hls.currentLevel = level;
+                    
+                    hls.currentLevel = (level === 'auto') ? -1 : level;
+                    
+                    
+                    currentLevel = hls.currentLevel; 
+                    
                     updateQualityMenu();
                     qualityMenu.classList.remove('visible');
                 }
@@ -700,28 +696,21 @@
             
             function attemptAutoplay() {
                 loadingIndicator.style.display = 'none';
-                
-                // Try to play with a promise
                 const playPromise = video.play();
-                
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
-                        // Autoplay started successfully
                         autoplayOverlay.classList.add('hidden');
-                        // Unmute after successful autoplay
                         setTimeout(() => {
                             video.muted = false;
                             updateVolumeIcon();
                         }, 1000);
                     }).catch(error => {
-                        // Autoplay was prevented, show the overlay
                         autoplayOverlay.classList.remove('hidden');
                         console.log('Autoplay prevented:', error);
                     });
                 }
             }
             
-            // Autoplay button handler
             autoplayButton.addEventListener('click', function() {
                 video.play().then(() => {
                     autoplayOverlay.classList.add('hidden');
@@ -733,11 +722,9 @@
                 });
             });
             
-            // Show controls on mouse move
             document.addEventListener('mousemove', function() {
                 controls.classList.remove('hidden');
                 controlsContainer.style.opacity = '1';
-                
                 clearTimeout(controlsTimeout);
                 controlsTimeout = setTimeout(function() {
                     if (!video.paused) {
@@ -748,20 +735,17 @@
                 }, 3000);
             });
             
-            // Quality menu toggle
             qualityBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 qualityMenu.classList.toggle('visible');
             });
             
-            // Hide quality menu when clicking elsewhere
             document.addEventListener('click', function(e) {
                 if (!qualityMenu.contains(e.target) && e.target !== qualityBtn) {
                     qualityMenu.classList.remove('visible');
                 }
             });
             
-            // Show center play button when video is paused
             video.addEventListener('play', function() {
                 centerPlayBtn.classList.remove('visible');
                 playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -772,7 +756,6 @@
                 playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
             });
             
-            // Play/Pause functionality
             playPauseBtn.addEventListener('click', togglePlay);
             centerPlayBtn.addEventListener('click', togglePlay);
             video.addEventListener('click', togglePlay);
@@ -785,7 +768,6 @@
                 }
             }
             
-            // Progress bar functionality
             video.addEventListener('timeupdate', updateProgress);
             
             progressContainer.addEventListener('click', function(e) {
@@ -797,26 +779,20 @@
             function updateProgress() {
                 const percent = (video.currentTime / video.duration) * 100;
                 progress.style.width = percent + '%';
-                
-                // Update buffered progress
                 if (video.buffered.length > 0) {
                     const bufferedPercent = (video.buffered.end(0) / video.duration) * 100;
                     progressBuffer.style.width = bufferedPercent + '%';
                 }
-                
-                // Update time displays
                 currentTimeEl.textContent = formatTime(video.currentTime);
             }
             
             function formatTime(seconds) {
                 if (isNaN(seconds)) return '0:00';
-                
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return mins + ':' + (secs < 10 ? '0' : '') + secs;
             }
             
-            // Volume controls
             volumeBtn.addEventListener('click', toggleMute);
             
             function toggleMute() {
@@ -852,7 +828,6 @@
                 volumeSliderFill.style.width = (video.muted ? 0 : video.volume * 100) + '%';
             }
             
-            // Fullscreen functionality
             fullscreenBtn.addEventListener('click', toggleFullscreen);
             
             function toggleFullscreen() {
@@ -867,7 +842,6 @@
                 }
             }
             
-            // Picture-in-Picture functionality
             pipBtn.addEventListener('click', togglePip);
             
             function togglePip() {
@@ -884,14 +858,11 @@
                 }
             }
             
-            // Update PiP button based on availability
             if (document.pictureInPictureEnabled) {
                 pipBtn.style.display = 'flex';
-                
                 video.addEventListener('enterpictureinpicture', function() {
                     pipBtn.innerHTML = '<i class="fas fa-expand-alt"></i>';
                 });
-                
                 video.addEventListener('leavepictureinpicture', function() {
                     pipBtn.innerHTML = '<i class="fas fa-compress-alt"></i>';
                 });
@@ -899,7 +870,6 @@
                 pipBtn.style.display = 'none';
             }
             
-            // Loading indicator
             video.addEventListener('waiting', function() {
                 loadingIndicator.style.display = 'flex';
             });
@@ -908,17 +878,14 @@
                 loadingIndicator.style.display = 'none';
             });
             
-            // Error handling
             function showError(message) {
                 errorMessage.textContent = message;
                 errorMessage.style.display = 'block';
                 loadingIndicator.style.display = 'none';
             }
             
-            // Initialize volume icon and slider
             updateVolumeIcon();
             
-            // Simulate viewer count changes for demo
             setInterval(() => {
                 const count = parseInt(viewerCount.textContent);
                 const change = Math.floor(Math.random() * 5) - 2;
@@ -931,4 +898,3 @@
     </script>
 </body>
 </html>
-
